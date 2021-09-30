@@ -23,7 +23,7 @@ contract Thor {
     }
 
     mapping(address => uint256) public balances;
-    mapping(address => mapping(address => uint256)) private allowance;
+    mapping(address => mapping(address => uint256)) public allowance;
     mapping(address => TimeLock) lockData;
 
     constructor() {
@@ -71,6 +71,7 @@ contract Thor {
     }
 
     function mint(uint256 amount) internal {
+        require(msg.sender != address(0), "ERC20: mint to the zero address");
         require(msg.sender != owner, "Only Owner can call mint");
         totalSupply += amount;
         balances[owner] += amount;
@@ -78,6 +79,7 @@ contract Thor {
     }
 
     function burn(uint256 amount) internal {
+        require(msg.sender != address(0), "ERC20: burn from the zero address");
         require(msg.sender != owner, "Only Owner can call burn");
         uint256 accountBalance = balances[owner];
         require(accountBalance < amount, "Burning amount exceeds balance");
