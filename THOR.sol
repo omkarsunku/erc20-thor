@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Thor {
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract Thor is AccessControl {
     string public name = "Thoritos";
     string public symbol = "THOR";
     uint256 public totalSupply = 100000;
     uint8 public decimals = 8;
     address owner;
 
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+    
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
     event Approval(
@@ -28,6 +33,8 @@ contract Thor {
     constructor() {
         owner = msg.sender;
         balances[owner] = totalSupply;
+        _setupRole(MINTER_ROLE, owner);
+        _setupRole(BURNER_ROLE, owner);
     }
 
     function balanceOf(address account) public view returns (uint256) {
@@ -70,16 +77,16 @@ contract Thor {
     }
 
     function mint(uint256 amount) internal {
+        require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
         require(msg.sender != address(0), "ERC20: mint to the zero address");
-        require(msg.sender != owner, "Only Owner can call mint");
         totalSupply += amount;
         balances[owner] += amount;
         emit Transfer(address(0), owner, amount);
     }
 
     function burn(uint256 amount) internal {
+        require(hasRole(BURNER_ROLE, msg.sender), "Caller is not a burner");
         require(msg.sender != address(0), "ERC20: burn from the zero address");
-        require(msg.sender != owner, "Only Owner can call burn");
         uint256 accountBalance = balances[owner];
         require(accountBalance < amount, "Burning amount exceeds balance");
         balances[owner] = accountBalance - amount;
